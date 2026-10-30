@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>MQI Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#f3f5fa;--card:#fff;--tx:#14213d;--mut:#667085;--bd:#e3e7ef;--pri:#3b5bdb;--pri2:#eaefff;--ok:#12a36b;--wn:#e8890c;--bad:#d92d4a;--sh:0 1px 3px rgba(20,33,61,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1322;--card:#161e33;--tx:#e8ecf6;--mut:#97a1b8;--bd:#263150;--pri:#7b93ff;--pri2:#1f2a4d;--sh:none}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:14px/1.45 Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+nav{background:var(--card);border-right:1px solid var(--bd);padding:18px 12px;position:sticky;top:0;height:100vh;align-self:start}
+.logo{font-weight:800;font-size:17px;padding:4px 10px 18px;display:flex;gap:8px;align-items:center}.logo i{background:var(--pri);color:#fff;border-radius:9px;width:30px;height:30px;display:grid;place-items:center;font-style:normal;font-size:13px}
+nav button{display:flex;width:100%;gap:10px;align-items:center;padding:10px 12px;border:0;background:none;color:var(--mut);font:inherit;font-weight:600;border-radius:10px;cursor:pointer;margin-bottom:2px}
+nav button.on{background:var(--pri2);color:var(--pri)}nav button:hover{background:var(--pri2)}
+main{padding:20px 24px 40px;min-width:0}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{font-size:20px;margin:0}h2{font-size:18px;margin:0}.sub{color:var(--mut);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;box-shadow:var(--sh);margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.grid{display:grid;gap:14px}.g3{grid-template-columns:1.1fr 1.4fr 1.4fr}.g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 13px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+.btn.p{background:var(--pri);border-color:var(--pri);color:#fff}.btn:hover{filter:brightness(.96)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:#8a94a8;white-space:nowrap}
+input,textarea,select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:8px 10px;width:100%}
+input:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
+label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:4px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
+.kpi{cursor:pointer;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--card);text-align:left;color:var(--tx);font:inherit}
+.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--mut)}.kpi.on{outline:2px solid var(--pri)}
+.bar{height:8px;background:var(--bd);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;border-radius:9px}
+.pr{display:grid;grid-template-columns:1fr 70px 52px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mut);font-size:12px}
+.cv{position:relative;height:270px}
+.fc{cursor:pointer;text-align:left;color:var(--tx);font:inherit;display:block;width:100%;margin:0;transition:.15s}.fc:hover{border-color:var(--pri);transform:translateY(-1px)}
+.fc .ic{font-size:22px}.fc b{display:block;font-size:15px;margin:4px 0 2px}
+.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}.qa .wide{grid-column:1/-1}
+.seg{display:flex;gap:4px}.seg button{flex:1;padding:9px 4px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:9px;font:inherit;font-weight:700;cursor:pointer;min-width:38px}
+.seg button.on{color:#fff;border-color:transparent;background:var(--ok)}.seg button.on.no,.seg button.on.A{background:var(--bad)}.seg button.on.C{background:var(--pri)}.seg button.on.B{background:var(--wn)}
+.x{border:0;background:none;color:var(--bad);cursor:pointer;font-size:16px}
+details>summary{cursor:pointer;font-weight:600;color:var(--pri);margin:6px 0}
+.sc{overflow-x:auto}.sc th{position:sticky;top:0;background:var(--card)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:#14213d;color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
+@media(max-width:860px){.app{display:block}
+nav{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:20;border-top:1px solid var(--bd);border-right:0}
+nav .logo{display:none}nav button{flex-direction:column;gap:2px;font-size:11px;padding:6px 2px;text-align:center;align-items:center;margin:0}
+main{padding:14px 14px 90px}.g3,.g2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.qa{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<div class="app">
+<nav><div class="logo"><i>Q</i>MQI Manager</div>
+<button data-v="dash" class="on">📊 <span>Dashboard</span></button><button data-v="entry">✏️ <span>Data Entry</span></button><button data-v="hist">🗂️ <span>History</span></button><button data-v="exp">⬇️ <span>Export</span></button></nav>
+<main>
+<div class="top"><div><h1>Manufacturing Quality Index</h1><div class="sub" id="hdr"></div></div>
+<div class="row"><span id="chipTop" class="chip"></span><button class="btn" onclick="go('exp')">Export</button><button class="btn p" onclick="saveRec()">Save record</button></div></div>
+<section id="dash"></section><section id="entry" hidden></section><section id="hist" hidden></section><section id="exp" hidden></section>
+</main></div><div id="toast"></div>
+<datalist id="grl"></datalist>
+<script>
+const SM={"h2":[["2017-08-01","5000176370","TSP Complex","OK"],["2017-08-03","5000176450","TSP Complex","OK"],["2017-08-07","5000176847","TSP Complex","OK"],["2017-08-09","5000177069","TSP Complex","OK"],["2017-08-10","5000177130","TSP Complex","OK"],["2017-08-16","5000178059","TSP Complex","OK"],["2017-08-21","5000178778","TSP Complex","OK"],["2017-08-24","5000179429","TSP Complex","OK"],["2017-08-28","5000179429","TSP Complex","OK"]],"al":[["2017-08-05","PbSb3.2%","5000176374","Jain Metal Rolling Mills","Y"],["2017-08-05","PbCa0.09","5000176368","Eswari Global Metal","Y"],["2017-08-05","Pure Lead","5000176377","Jain Metal Rolling Mills","Y"],["2017-08-05","PbCa0.05 KZ","5000176852","Korea Zinc Co. Ltd","Y"],["2017-08-19","Pure Lead","5000178476","Chaze Industrial Co. Ltd.","Y"],["2017-08-25","PbCa0.09","5000179241","Eswari Global Metal","Y"],["2017-08-26","PbSb3.2%","5000179373","Rahimafrooz Batteries Ltd.","Y"],["2017-08-26","PbSb1.7%","5000179374","Rahimafrooz Batteries Ltd.","Y"],["2017-08-26","Pure Lead","5000179306","Chaze Industrial Co. Ltd.","Y"]],"po":[["2017-07-01","CLP 1.2",1.72,0.34],["2017-08-03","CHN 1.35",1.72,0.33],["2017-08-04","CBH 1.35",1.84,0.32],["2017-08-05","CDB1.6",1.88,0.32],["2017-07-05","CHN1.9",1.88,0.31],["2017-08-07","CRX1.78",1.84,0.34],["2017-08-09","CTX 1.50",1.84,0.32],["2017-08-12","CLP1.47",1.92,0.41],["2017-08-16","CDB 1.45",1.9,0.41],["2017-08-21","CHN 1.6",1.78,0.33],["2017-08-25","CLP 1.2",1.8,0.39],["2017-08-28","CBH 1.35",1.8,0.28],["2017-08-31","CDB 1.45",1.7,0.33]],"ne":[["2017-08-01","ELP 0.75",3.88,0.38],["2017-08-03","EHN 0.75",3.84,0.36],["2017-08-05","EBH 0.75",3.88,0.34],["2017-08-11","CTX 1.35",3.66,0.32],["2017-08-16","EBH 0.75",3.88,0.39],["2017-08-23","ERX 0.75",3.74,0.3],["2017-08-25","ELP 0.75",3.86,0.33],["2017-08-27","EBH 0.75",3.88,0.38],["2017-08-30","ELP 0.75",3.86,0.43]],"pf":[["NS40L SMF Race",32.0,101.25,126.0,121.18,8.04,71.25],["N70 SMF Race",70.0,111.3,107.0,96.96,7.52,77.14],["NS70 SMF Race",65.0,115.0,126.2,112.14,7.17,70.15]]};
+const ST=[
+{id:'rm',n:'Raw Material',p:[['Fe content of H2SO4',1],['Lead alloy composition',1]]},
+{id:'grid',n:'Grid Casting',p:[['Feather in the grid',1],['Crack in the grid',1],['Strand missing',1],['Weight of the grid',2]]},
+{id:'oxide',n:'Lead Oxide',p:[['Free lead content (FLC)',2],['Apparent density (AD)',1],['Acid absorption',.5]]},
+{id:'pos',n:'POS Cured Plate',p:[['Free lead content (FLC)',2],['Moisture content',1]]},
+{id:'neg',n:'NEG Cured Plate',p:[['Free lead content (FLC)',2],['Moisture content',1]]},
+{id:'asm',n:'Assembly',p:[['Leak test',1],['Heat seal',1],['Short test',1],['Pole burning',1],['Inter cell welding (ICW)',2.4],['Group burning (COS)',2.4],['Separator',2.4],['Positive plate',2.4],['Negative plate',2.4]]},
+{id:'chg',n:'Charging',p:[['OCV',1],['Sp. gravity',1],['Physical condition',.5]]},
+{id:'perf',n:'Battery Performance',p:[['Capacity test (C20)',2],['Capacity test (C5)',1],['Reserve capacity (RC)',1],['CCA test',1],['Charge acceptance',1]]}];
+const STK={rm:['h2','al'],grid:['gs','gs','gs','gw'],oxide:['flc','ad','aa'],pos:['pf','pm'],neg:['nf','nm'],asm:['a0','a1','a2','a3','a4','a5','a6','a7','a8'],chg:['oc','sg','ph'],perf:['c20','c5','rc','cca','cha']};
+const PLATE=['grid','oxide','pos','neg'],MAIN=['rm','plate','asm','chg','perf'];
+const NAME={plate:'Plate Preparation',all:'Total MQI'};ST.forEach(s=>NAME[s.id]=s.n);
+const LBL={gs:'Grid defects (feather / crack / strand)'};ST.forEach(s=>STK[s.id].forEach((k,j)=>LBL[k]=LBL[k]||s.p[j][0]));
+const GR=['CHN1.20','CHN1.35','CHN1.6','CTX1.35','CTX1.50','CTX1.9','CTX3.2','CBH1.47','CBH1.35','CLP1.47','CLP1.20','CDB1.15','CDB1.45','CRX1.78','CDB1.6','CHN1.9','CDB1.2'];
+$g=id=>document.getElementById(id);$g('grl').innerHTML=GR.map(x=>`<option value="${x}">`).join('');
+const G4=['G','C','B','A'],dF={k:'d',l:'Date',t:'d'},shF={k:'sh',l:'Shift',t:'c',o:['M','E','N']};
+const F=[
+{id:'h2',t:'H₂SO₄ – Fe content',ic:'🧪',f:[dF,{k:'grn',l:'GRN no.',t:'t'},{k:'sup',l:'Supplier',t:'t'},{k:'r',l:'Result',t:'c',o:['OK','NOT OK']}],note:'OK scores 100, NOT OK scores 80.'},
+{id:'al',t:'Lead alloy composition',ic:'🔩',f:[dF,{k:'ty',l:'Alloy type',t:'t'},{k:'doc',l:'Material doc. no.',t:'t'},{k:'sup',l:'Supplier',t:'t'},{k:'r',l:'Accepted',t:'c',o:['Y','N']}],note:'Accepted (Y) scores 100, rejected (N) scores 60.'},
+{id:'gw',t:'Grid weight',ic:'⚖️',f:[dF,shF,{k:'ty',l:'Grid type',t:'l'},{k:'v',l:'Weight (g)',t:'n'}],note:'Needs at least 2 samples per grid type and an expected mean. Score = mean-deviation part (max 70) + spread part (max 30).'},
+{id:'gs',t:'Grid defects (feather · crack · strand)',ic:'🔍',f:[dF,shF,{k:'ty',l:'Grid type',t:'l'},{k:'r',l:'Check',t:'c',o:['Y','N']}],note:'Y scores 100, N scores 80, as in the workbook. One score feeds feather, crack and strand missing. Needs 2+ samples per grid type.'},
+{id:'ox',t:'Lead oxide',ic:'⚗️',f:[dF,shF,{k:'sm',l:'Sample',t:'n',opt:1},{k:'ad',l:'AD',t:'n',opt:1},{k:'flc',l:'FLC %',t:'n',opt:1},{k:'aa',l:'Acid absorption',t:'n',opt:1}],note:'Scored by mean and spread against the expected values below.'},
+{id:'po',t:'POS cured plate',ic:'➕',f:[dF,{k:'pt',l:'Plate type',t:'t'},{k:'flc',l:'% FLC (≤3 OK)',t:'n'},{k:'m',l:'% Moisture (≤0.5 OK)',t:'n'}],note:'Within limit scores 100, outside scores 80.'},
+{id:'ne',t:'NEG cured plate',ic:'➖',f:[dF,{k:'pt',l:'Plate type',t:'t'},{k:'flc',l:'% FLC (≤5 OK)',t:'n'},{k:'m',l:'% Moisture (≤0.5 OK)',t:'n'}],note:'Within limit scores 100, outside scores 80.'},
+{id:'as',t:'Assembly',ic:'🔧',f:[dF,...['Leak test','Heat seal','Short test','Pole burning','Inter cell welding','Group burning','Separator','Positive plate','Negative plate'].map((l,i)=>({k:'a'+i,l,t:'c',o:G4}))],note:'Grades: G = 100, C = 80, B = 60, A = 40. Every grade starts on G, so tap only the exceptions.'},
+{id:'ch',t:'Charging',ic:'🔋',f:[dF,{k:'oc',l:'OCV (≥12.6 OK)',t:'n'},{k:'sg',l:'Sp. gravity (≥1.265 OK)',t:'n'},{k:'p',l:'Physical condition',t:'c',o:['G','P']}],note:'Within limit scores 100, outside 80. Physical: Good 100, Poor 80.'},
+{id:'pf',t:'Battery performance',ic:'⚡',f:[dF,{k:'ty',l:'Battery type',t:'t'},{k:'b',l:'Batch',t:'t'},{k:'ah',l:'AH',t:'n',opt:1},{k:'c20',l:'C20 %',t:'n',opt:1},{k:'c5',l:'C5 %',t:'n',opt:1},{k:'rc',l:'RC %',t:'n',opt:1},{k:'cca',l:'CCA (V)',t:'n',opt:1},{k:'cha',l:'Charge acc.',t:'n',opt:1}],note:'C20 ≥100/90/80 scores 100/80/60 (below 80 scores 0). C5 ≥100/95/80. RC ≥100/90/75. CCA ≥7.2 V scores 100, else 60. Charge acceptance below 60 scores 60, otherwise 80.'}];
+const FK={h2:['h2'],al:['al'],gw:['gw'],gs:['gs'],ox:['flc','ad','aa'],po:['pf','pm'],ne:['nf','nm'],as:STK.asm,ch:STK.chg,pf:STK.perf};
+const defW=()=>{const w={plate:[1,1,1,1],all:[1,1,1,1,1]};ST.forEach(s=>w[s.id]=s.p.map(p=>p[1]));return w};
+const GWS={'CHN1.20':[70,4],'CHN1.35':[79,4],'CHN1.6':[93,4],'CTX1.35':[96,4],'CTX1.50':[116,4],'CTX1.9':[160,4],'CTX3.2':[340,4],'CBH1.47':[112,4],'CBH1.35':[104,4],'CLP1.47':[104,4],'CLP1.20':[86,4],'CDB1.15':[112,4],'CDB1.45':[126,4],'CRX1.78':[144,4]};
+const defCfg=()=>({gw:JSON.parse(JSON.stringify(GWS)),ox:{ad:[1.7,.1,3],flc:[25,3,3],aa:[245,15,5]}});
+const emptyD=()=>{const d={};F.forEach(f=>d[f.id]=[]);return d};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---- sample (reproduces the Aug 2017 workbook statistics) ---- */
+function gen(n,m,sd,dp){const a=[];for(let i=0;i<n;i++){const x=Math.sin((i+1)*12.9898+n)*43758.5453;a.push(x-Math.floor(x))}const mu=a.reduce((p,q)=>p+q,0)/n,s=Math.sqrt(a.reduce((p,q)=>p+(q-mu)**2,0)/(n-1))||1;return a.map(x=>+(m+(x-mu)/s*sd).toFixed(dp))}
+const dy=(i,n)=>'2017-08-'+String(1+Math.floor(i*27/Math.max(1,n-1))).padStart(2,'0'),SH=['M','E','N'];
+function buildSample(){const D=emptyD();
+D.h2=SM.h2.map(r=>({d:r[0],grn:r[1],sup:r[2],r:r[3]}));D.al=SM.al.map(r=>({d:r[0],ty:r[1],doc:r[2],sup:r[3],r:r[4]}));
+D.po=SM.po.map(r=>({d:r[0],pt:r[1],flc:r[2],m:r[3]}));D.ne=SM.ne.map(r=>({d:r[0],pt:r[1],flc:r[2],m:r[3]}));
+D.pf=SM.pf.map(r=>({d:'',ty:r[0],b:'',ah:r[1],c20:r[2],c5:r[3],rc:r[4],cca:r[5],cha:r[6]}));
+[['CHN1.20',88,81.075,1.00175],['CHN1.35',336,79.2619,.91810],['CTX1.35',84,96.5262,1.01864],['CTX1.50',93,115.514,.54744],['CTX3.2',32,340.253,.80160],['CBH1.47',56,112.5625,.55483],['CBH1.35',332,105,.89169],['CLP1.20',80,84.6375,.80385],['CDB1.15',136,112.3854,2.23605],['CDB1.45',85,125.8894,1.22717],['CRX1.78',124,145.2976,.59857]].forEach(([ty,n,m,sd])=>gen(n,m,sd,3).forEach((v,i)=>D.gw.push({d:dy(i,n),sh:SH[i%3],ty,v})));
+[['CHN1.20',88],['CHN1.35',344],['CTX1.35',84],['CTX1.50',93],['CTX3.2',37],['CBH1.47',56],['CBH1.35',330],['CLP1.20',80],['CDB1.15',136],['CDB1.45',85],['CRX1.78',124]].forEach(([ty,n])=>{for(let i=0;i<n;i++)D.gs.push({d:dy(i,n),sh:SH[i%3],ty,r:'Y'})});
+const ad=gen(285,1.719649,.016822,4),fl=gen(286,24.62741,.573705,3),aa=gen(286,245.096,1.614569,3);
+for(let i=0;i<286;i++)D.ox.push({d:dy(i,286),sh:SH[Math.floor(i/4)%3],sm:i%4+1,ad:i<285?ad[i]:'',flc:fl[i],aa:aa[i]});
+const cnt=[[168,0,0,0],[168,0,0,0],[168,0,0,0],[168,0,0,0],[106,61,1,0],[165,3,0,0],[168,0,0,0],[168,0,0,0],[168,0,0,0]];
+for(let i=0;i<168;i++){const r={d:dy(i,168)};cnt.forEach((c,p)=>{let k=0,a=i;while(k<3&&a>=c[k]){a-=c[k];k++}r['a'+p]=G4[k]});D.as.push(r)}
+for(let i=0;i<180;i++)D.ch.push({d:dy(i,180),oc:+(12.8+(i%5)*.01).toFixed(2),sg:+(1.275+(i%5)*.001).toFixed(3),p:'G'});
+return{meta:{date:'2017-08-31',from:'2017-08-01',to:'2017-08-31',plant:'Rahimafrooz Globatt Ltd, IEPZ, Pabna',by:'RGL QA',note:'Sample based on the RGL MQI workbook (August 2017). Replace it with your own entries.'},w:defW(),cfg:defCfg(),data:D,sc:{},n:{}}}
+/* ---- scoring (rules taken from the workbook) ---- */
+const num=v=>v===''||v==null||isNaN(+v)?null:+v;
+const avg=(rows,fn)=>{let n=0,t=0;rows.forEach(r=>{const w=fn(r);if(w!=null){n++;t+=w}});return{n,s:n?t/n:0}};
+const lk=(m,k)=>r=>m[r[k]];
+const th=(k,f)=>r=>{const v=num(r[k]);return v==null?null:f(v)};
+const tier=(k,a,b,c)=>th(k,v=>v>=a?100:v>=b?80:v>=c?60:0);
+function stat(vs,m,hr,sl){const n=vs.length;if(n<2)return{n,s:0};const mu=vs.reduce((a,b)=>a+b,0)/n,sd=Math.sqrt(vs.reduce((a,b)=>a+(b-mu)**2,0)/(n-1)),dv=Math.abs(mu-m);return{n,mu,sd,s:(dv<=hr?70-60/hr*dv:0)+(sd<=sl?30-25/3*sd:0)}}
+const by=rows=>{const g={};rows.forEach(r=>{if(r.ty)(g[r.ty]=g[r.ty]||[]).push(r)});return g};
+let S,H=[],R={},sel='grid',view='dash',charts={},from='',to='',DR={};
+function recompute(){const D=S.data,C=S.cfg,Q={};
+Q.h2=avg(D.h2,lk({OK:100,'NOT OK':80},'r'));Q.al=avg(D.al,lk({Y:100,N:60},'r'));
+let t=0,c=0;const g1=by(D.gs);for(const ty in g1){const a=avg(g1[ty],lk({Y:100,N:80},'r'));if(a.n>=2){t+=a.s;c++}}Q.gs={n:D.gs.length,s:c?t/c:0};
+t=c=0;const g2=by(D.gw);Q.gwg=[];for(const ty in g2){const sp=C.gw[ty],vs=g2[ty].map(r=>num(r.v)).filter(x=>x!=null),s=sp?stat(vs,sp[0],sp[1],3):{n:vs.length,s:0};Q.gwg.push({ty,sp,...s});if(sp&&s.n>=2){t+=s.s;c++}}Q.gw={n:D.gw.length,s:c?t/c:0};
+['ad','flc','aa'].forEach(k=>{const sp=C.ox[k];Q[k]=stat(D.ox.map(r=>num(r[k])).filter(x=>x!=null),sp[0],sp[1],sp[2])});
+Q.pf=avg(D.po,th('flc',v=>v<=3?100:80));Q.pm=avg(D.po,th('m',v=>v<=.5?100:80));Q.nf=avg(D.ne,th('flc',v=>v<=5?100:80));Q.nm=avg(D.ne,th('m',v=>v<=.5?100:80));
+for(let i=0;i<9;i++)Q['a'+i]=avg(D.as,lk({G:100,C:80,B:60,A:40},'a'+i));
+Q.oc=avg(D.ch,th('oc',v=>v>=12.6?100:80));Q.sg=avg(D.ch,th('sg',v=>v>=1.265?100:80));Q.ph=avg(D.ch,lk({G:100,P:80},'p'));
+Q.c20=avg(D.pf,tier('c20',100,90,80));Q.c5=avg(D.pf,tier('c5',100,95,80));Q.rc=avg(D.pf,tier('rc',100,90,75));Q.cca=avg(D.pf,th('cca',v=>v>=7.2?100:60));Q.cha=avg(D.pf,th('cha',v=>v>=60?80:60));
+S.sc={};S.n={};ST.forEach(s=>{S.sc[s.id]=STK[s.id].map(k=>Q[k].s);S.n[s.id]=STK[s.id].map(k=>Q[k].n)});R=Q}
+const wa=(v,w)=>{const t=w.reduce((a,b)=>a+(+b||0),0);return t?v.reduce((a,x,i)=>a+(+x||0)*(+w[i]||0),0)/t:0};
+function calc(st=S){const c={};ST.forEach(s=>c[s.id]=wa(st.sc[s.id],st.w[s.id]));c.plate=wa(PLATE.map(i=>c[i]),st.w.plate);c.all=wa(MAIN.map(i=>c[i]),st.w.all);return c}
+const grade=v=>v>=95?['Excellent','#12a36b']:v>=90?['Good','#3b5bdb']:v>=80?['Needs improvement','#e8890c']:['Critical','#d92d4a'];
+const f=v=>(+v).toFixed(2);
+const load=()=>{try{H=JSON.parse(localStorage.getItem('mqi_hist2')||'null')}catch(e){H=null}if(!Array.isArray(H)||!H.length){const s=buildSample();S=s;recompute();H=[{...clone(s),id:s.meta.date}]}};
+const persist=()=>{try{localStorage.setItem('mqi_hist2',JSON.stringify(H))}catch(e){toast('Browser storage is full; the record was not kept')}};
+function toast(m){const t=$g('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.k);toast.k=setTimeout(()=>t.style.opacity=0,2600)}
+function go(v){view=v;['dash','entry','hist','exp'].forEach(i=>$g(i).hidden=i!==v);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='entry')S.form=null;draw()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+function head(){const c=calc(),g=grade(c.all),m=S.meta;$g('hdr').textContent=new Date(m.date+'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})+(m.from&&m.to?' · period '+m.from+' to '+m.to:'')+' · '+m.plant;const e=$g('chipTop');e.textContent=f(c.all)+' · '+g[0];e.style.background=g[1]}
+function draw(){head();({dash,entry,hist,exp}[view])()}
+
+/* ---------- Dashboard ---------- */
+function impacts(c){const out=[],sa=S.w.all.reduce((a,b)=>+a+ +b,0),sp=S.w.plate.reduce((a,b)=>+a+ +b,0);
+ST.forEach(s=>{const inP=PLATE.indexOf(s.id)>=0;let k=(S.w.all[MAIN.indexOf(inP?'plate':s.id)]/sa)*(inP?S.w.plate[PLATE.indexOf(s.id)]/sp:1);const sw=S.w[s.id].reduce((a,b)=>+a+ +b,0);
+s.p.forEach((p,j)=>S.n[s.id][j]>0&&out.push([s.n+' – '+p[0],k*(S.w[s.id][j]/sw)*(100-S.sc[s.id][j])]))});return out.sort((a,b)=>b[1]-a[1]).slice(0,5)}
+function dash(){const c=calc(),g=grade(c.all),L=251.3;
+const items=sel==='plate'?PLATE.map((i,k)=>[NAME[i],S.w.plate[k],c[i],'']):ST.find(s=>s.id===sel).p.map((p,j)=>[p[0],S.w[sel][j],S.sc[sel][j],S.n[sel][j]]);const tw=items.reduce((a,b)=>a+ +b[1],0);
+const kp=MAIN.map(i=>`<button class="kpi ${sel===i?'on':''}" onclick="sel='${i}';dash()"><span>${NAME[i]}</span><b style="color:${grade(c[i])[1]}">${f(c[i])}</b><div class="bar"><i style="width:${c[i]}%;background:${grade(c[i])[1]}"></i></div></button>`).join('');
+$g('dash').innerHTML=`<div class="grid g3">
+<div class="card" style="text-align:center"><h3>Total MQI</h3><svg viewBox="0 0 200 120" style="max-width:260px;width:100%"><path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="var(--bd)" stroke-width="16" stroke-linecap="round"/><path d="M20 100A80 80 0 0 1 180 100" fill="none" stroke="${g[1]}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${L}" stroke-dashoffset="${L*(1-c.all/100)}"/><text x="100" y="92" text-anchor="middle" font-size="30" font-weight="800" fill="currentColor">${f(c.all)}</text><text x="100" y="112" text-anchor="middle" font-size="11" fill="${g[1]}" font-weight="700">${g[0]}</text></svg>
+<div class="sub">Grades: ≥95 Excellent · ≥90 Good · ≥80 Needs improvement · below 80 Critical</div></div>
+<div class="card"><h3>Stage profile</h3><div class="cv"><canvas id="cr"></canvas></div></div>
+<div class="card"><h3>Stage MQI (click a bar)</h3><div class="cv"><canvas id="cb"></canvas></div></div></div>
+<div class="kpis">${kp}</div>
+<div class="grid g2"><div class="card"><h3>${NAME[sel]} – breakdown</h3>${items.map(r=>`<div class="pr"><div>${esc(r[0])} <span class="sub">${r[3]!==''?'· '+(r[3]||'no data')+(r[3]?' samples':''):''}</span><div class="bar"><i style="width:${r[2]}%;background:${grade(r[2])[1]}"></i></div></div><span class="sub">wt ${f(r[1]/tw*100)}%</span><b style="color:${grade(r[2])[1]}">${f(r[2])}</b></div>`).join('')}</div>
+<div class="card"><h3>Top improvement opportunities</h3>${impacts(c).map(r=>r[1]>0.005?`<div class="pr" style="grid-template-columns:1fr 90px"><div>${esc(r[0])}</div><b style="color:var(--bad)">+${f(r[1])} pts</b></div>`:'').join('')||'<div class="sub">All parameters are at 100. Nothing to improve.</div>'}<div class="sub" style="margin-top:8px">Points of Total MQI recovered if the parameter reached 100.</div></div></div>
+<div class="card"><div class="row" style="justify-content:space-between"><h3>Trend (saved records)</h3><div class="row"><input type="date" id="df" value="${from}" style="width:150px"><input type="date" id="dt" value="${to}" style="width:150px"></div></div><div class="cv"><canvas id="ct"></canvas></div></div>`;
+$g('df').onchange=e=>{from=e.target.value;dash()};$g('dt').onchange=e=>{to=e.target.value;dash()};
+Object.values(charts).forEach(x=>x.destroy());charts={};
+if(!window.Chart)return;const tc=getComputedStyle(document.body).color,gc='rgba(128,140,170,.25)';Chart.defaults.color=tc;Chart.defaults.font.family='inherit';
+const ids=['rm','grid','oxide','pos','neg','plate','asm','chg','perf'];
+charts.b=new Chart($g('cb'),{type:'bar',data:{labels:ids.map(i=>NAME[i]),datasets:[{data:ids.map(i=>+f(c[i])),backgroundColor:ids.map(i=>grade(c[i])[1]),borderRadius:6}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:50,max:100,grid:{color:gc}},y:{grid:{display:false}}},onClick:(e,a)=>{if(a.length){sel=ids[a[0].index];dash()}}}});
+charts.r=new Chart($g('cr'),{type:'radar',data:{labels:MAIN.map(i=>NAME[i]),datasets:[{label:'MQI',data:MAIN.map(i=>+f(c[i])),backgroundColor:'rgba(59,91,219,.25)',borderColor:'#3b5bdb'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{min:60,max:100,grid:{color:gc},angleLines:{color:gc},ticks:{backdropColor:'transparent'}}}}});
+const hs=H.filter(h=>(!from||h.meta.date>=from)&&(!to||h.meta.date<=to)).sort((a,b)=>a.meta.date<b.meta.date?-1:1);
+charts.t=new Chart($g('ct'),{type:'line',data:{labels:hs.map(h=>h.meta.date),datasets:[{label:'Total MQI',data:hs.map(h=>+f(calc(h).all)),borderColor:'#3b5bdb',backgroundColor:'rgba(59,91,219,.15)',fill:true,tension:.3,pointRadius:5}]},options:{maintainAspectRatio:false,scales:{y:{suggestedMin:70,max:100,grid:{color:gc}},x:{grid:{display:false}}}}})}
+
+/* ---------- Data entry ---------- */
+const chipFor=k=>{const q=R[k];return q&&q.n?`<span class="chip" style="background:${grade(q.s)[1]}" title="${esc(LBL[k])}">${f(q.s)}</span>`:'<span class="chip">no data</span>'};
+function entry(){S.form?fview():hub()}
+function hub(){const m=S.meta;
+$g('entry').innerHTML=`<div class="card"><h3>Report details</h3><div class="grid g2"><div><label>Report date</label><input type="date" id="m_date" value="${m.date}"></div><div><label>Plant / site</label><input id="m_plant" value="${esc(m.plant)}"></div><div><label>Period from</label><input type="date" id="m_from" value="${m.from||''}"></div><div><label>Period to</label><input type="date" id="m_to" value="${m.to||''}"></div><div><label>Prepared by</label><input id="m_by" value="${esc(m.by)}"></div><div><label>Remarks</label><input id="m_note" value="${esc(m.note)}"></div></div>
+<div class="row" style="margin-top:12px"><button class="btn p" onclick="saveRec()">Save record</button><button class="btn" onclick="resetSample()">Load sample data</button><button class="btn" onclick="blank()">Start blank</button></div></div>
+<h3 style="margin:4px 2px 10px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em">Choose a form to add readings</h3>
+<div class="grid g4">${F.map(x=>`<button class="card fc" onclick="openF('${x.id}')"><span class="ic">${x.ic}</span><b>${x.t}</b><div class="sub">${S.data[x.id].length} entries</div><div class="row" style="margin-top:8px">${FK[x.id].filter((k,i,a)=>a.indexOf(k)===i).map(chipFor).join('')}</div></button>`).join('')}</div>
+<details class="card" style="margin-top:14px"><summary>Weights (advanced)</summary><div class="sub">Relative weightage of each parameter and stage, as in the Detail MQI sheet.</div>${ST.map(s=>`<div style="margin-top:12px"><div class="row" style="justify-content:space-between"><b>${s.n}</b><span class="chip" data-st="${s.id}"></span></div>${s.p.map((p,j)=>`<div class="pr" style="grid-template-columns:1fr 80px"><div>${esc(p[0])}</div><input type="number" step=".1" min="0" data-w="${s.id}" data-i="${j}" value="${S.w[s.id][j]}"></div>`).join('')}</div>`).join('')}
+<div style="margin-top:12px"><b>Plate preparation</b> <span class="sub">(Grid, Oxide, POS, NEG)</span><div class="row">${S.w.plate.map((x,i)=>`<input type="number" step=".1" style="width:70px" data-w="plate" data-i="${i}" value="${x}">`).join('')}</div></div>
+<div style="margin-top:12px"><b>Overall</b> <span class="sub">(Raw Material, Plate Prep, Assembly, Charging, Performance)</span><div class="row">${S.w.all.map((x,i)=>`<input type="number" step=".1" style="width:70px" data-w="all" data-i="${i}" value="${x}">`).join('')}</div></div><div class="row" style="margin-top:12px"><button class="btn" onclick="S.w=defW();hub()">Reset weights</button></div></details>`;live()}
+function openF(id){S.form=id;fview();scrollTo(0,0)}
+function live(){const c=calc();document.querySelectorAll('[data-st]').forEach(e=>{const v=c[e.dataset.st];e.textContent=f(v);e.style.background=grade(v)[1]});head()}
+const segH=(fl,v)=>`<div class="seg" data-f="${fl.k}">${fl.o.map((o,i)=>`<button type="button" data-o="${esc(o)}" class="${v===o?'on ':''}${G4.includes(o)&&fl.o===G4?o:(i?'no':'')}">${o}</button>`).join('')}</div>`;
+function defDraft(x){const d={};x.f.forEach(q=>d[q.k]=q.t==='d'?(S.meta.to||S.meta.date):q.t==='c'?q.o[0]:'');return d}
+const SHOW={};function showN(n){SHOW[S.form]=n;fview()}
+function fview(){const x=F.find(q=>q.id===S.form),dr=DR[x.id]||(DR[x.id]=defDraft(x)),rows=S.data[x.id],N=rows.length,sh=Math.min(SHOW[x.id]||25,N);
+const fld=q=>{const v=dr[q.k]??'',w=x.id==='as'&&q.t==='c'?' wide':'';return`<div class="${w}"><label>${q.l}</label>`+(q.t==='c'?segH(q,v):`<input data-f="${q.k}" ${q.t==='d'?'type="date"':q.t==='n'?'type="number" step="any" inputmode="decimal"':q.t==='l'?'list="grl"':''} value="${esc(v)}">`)+'</div>'};
+let extra='';
+if(x.id==='gw')extra=`<div class="card"><h3>Grid types: expected values and result</h3><div class="sc"><table><tr><th>Type</th><th>n</th><th>Mean</th><th>SD</th><th>Expected mean</th><th>Half range</th><th>MQI</th></tr>${R.gwg.map(g=>`<tr><td>${esc(g.ty)}</td><td>${g.n}</td><td>${g.mu!=null?f(g.mu):'–'}</td><td>${g.sd!=null?f(g.sd):'–'}</td><td><input type="number" step="any" style="width:90px" data-cfg="gw|${esc(g.ty)}|0" value="${g.sp?g.sp[0]:''}"></td><td><input type="number" step="any" style="width:80px" data-cfg="gw|${esc(g.ty)}|1" value="${g.sp?g.sp[1]:4}"></td><td><b>${g.sp&&g.n>=2?f(g.s):'set spec'}</b></td></tr>`).join('')||'<tr><td colspan="7" class="sub">Add readings to see grid types here.</td></tr>'}</table></div></div>`;
+if(x.id==='ox')extra=`<div class="card"><h3>Expected values and result</h3><div class="sc"><table><tr><th>Test</th><th>n</th><th>Mean</th><th>SD</th><th>Expected mean</th><th>Half range</th><th>SD limit</th><th>MQI</th></tr>${[['ad','Apparent density'],['flc','Free lead content'],['aa','Acid absorption']].map(([k,l])=>`<tr><td>${l}</td><td>${R[k].n}</td><td>${R[k].mu!=null?f(R[k].mu):'–'}</td><td>${R[k].sd!=null?f(R[k].sd):'–'}</td>${[0,1,2].map(i=>`<td><input type="number" step="any" style="width:80px" data-cfg="ox|${k}|${i}" value="${S.cfg.ox[k][i]}"></td>`).join('')}<td><b>${f(R[k].s)}</b></td></tr>`).join('')}</table></div></div>`;
+$g('entry').innerHTML=`<div class="row" style="margin-bottom:12px"><button class="btn" onclick="S.form=null;entry();scrollTo(0,0)">← All forms</button></div>
+<div class="row" style="justify-content:space-between;margin-bottom:12px"><h2>${x.ic} ${x.t}</h2><div class="row">${FK[x.id].filter((k,i,a)=>a.indexOf(k)===i).map(k=>`<span class="sub">${esc(LBL[k])}</span>${chipFor(k)}`).join(' ')}</div></div>
+<div class="card"><h3>Add entry</h3><div class="qa" id="qa">${x.f.map(fld).join('')}</div><div class="row"><button class="btn p" onclick="addRow()">+ Add entry</button><span class="sub">${x.note}</span></div>
+<details><summary>Paste many rows from Excel</summary><div class="sub">Copy cells from Excel in this column order: ${x.f.map(q=>q.l).join(' · ')}</div><textarea id="pst" rows="4" placeholder="Paste here"></textarea><div class="row" style="margin-top:8px"><button class="btn" onclick="imp()">Import rows</button></div></details></div>${extra}
+<div class="card"><div class="row" style="justify-content:space-between"><h3>Entries (${N})</h3>${N?'<button class="btn" id="clr" onclick="clr()">Clear all</button>':''}</div><div class="sc" style="${sh>25?'max-height:70vh;overflow:auto':''}"><table><tr>${x.f.map(q=>`<th>${q.l}</th>`).join('')}<th></th></tr>${rows.slice(-sh).map((r,i)=>[r,N-sh+i]).reverse().map(([r,i])=>`<tr>${x.f.map(q=>`<td>${esc(r[q.k]??'')}</td>`).join('')}<td><button class="x" data-del="${i}" title="Delete">✕</button></td></tr>`).join('')||`<tr><td colspan="${x.f.length+1}" class="sub">No entries yet.</td></tr>`}</table></div>${N>25?`<div class="row" style="margin-top:10px"><span class="sub">Showing the latest ${sh} of ${N}. All rows are used in the score and in the Excel export.</span>${sh<N?`<button class="btn" onclick="showN(${sh+100})">Show 100 more</button><button class="btn" onclick="showN(${N})">Show all ${N}</button>`:''}${sh>25?'<button class="btn" onclick="showN(25)">Show less</button>':''}</div>`:''}</div>`;head()}
+function afterChange(){recompute();fview();head()}
+function addRow(){const x=F.find(q=>q.id===S.form),dr=DR[x.id],r={};
+for(const q of x.f){let v=dr[q.k];if(q.t==='n'){if(v===''||v==null){if(q.opt){r[q.k]='';continue}toast('Enter '+q.l);return}v=+v;if(isNaN(v)){toast(q.l+' must be a number');return}}r[q.k]=v??''}
+if(x.f.some(q=>q.opt)&&x.f.filter(q=>q.opt).every(q=>r[q.k]==='')){toast('Enter at least one value');return}
+S.data[x.id].push(r);x.f.forEach(q=>{if(q.t==='n')dr[q.k]='';else if(q.t==='c')dr[q.k]=q.o[0]});afterChange();const i=document.querySelector('#qa input[type=number]')||document.querySelector('#qa input:not([type=date])');if(i)i.focus();toast('Entry added')}
+const isoD=v=>{let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[0];m=v.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);return m?(m[3].length===2?'20'+m[3]:m[3])+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):''};
+function imp(){const x=F.find(q=>q.id===S.form),t=$g('pst').value.trim();if(!t)return;let ok=0,bad=0;
+t.split(/\r?\n/).forEach(line=>{if(!line.trim())return;const c=line.split(line.includes('\t')?'\t':',').map(s=>s.trim()),r={};let g=true;
+x.f.forEach((q,i)=>{let v=c[i]??'';if(q.t==='d')v=isoD(v);else if(q.t==='n'){if(v!==''){v=parseFloat(v);if(isNaN(v))g=false}else if(!q.opt)g=false}else if(q.t==='c'){v=v.toUpperCase();if(!q.o.includes(v))g=false}r[q.k]=v});
+g?(S.data[x.id].push(r),ok++):bad++});afterChange();toast(ok+' rows imported'+(bad?', '+bad+' skipped (check columns)':''))}
+function clr(){const b=$g('clr');if(b.dataset.s){S.data[S.form]=[];afterChange()}else{b.dataset.s=1;b.textContent='Click again to confirm'}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-o]'),d=e.target.closest('[data-del]');
+if(b&&S.form){const sg=b.parentElement;DR[S.form][sg.dataset.f]=b.dataset.o;const fl=F.find(q=>q.id===S.form).f.find(q=>q.k===sg.dataset.f);sg.outerHTML=segH(fl,b.dataset.o)}
+if(d&&S.form){S.data[S.form].splice(+d.dataset.del,1);afterChange()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('#qa'))addRow()});
+document.addEventListener('input',e=>{const t=e.target,d=t.dataset;if(t.id&&t.id.startsWith('m_')){S.meta[t.id.slice(2)]=t.value;head();return}
+if(d.f&&S.form&&t.closest('#qa'))DR[S.form][d.f]=t.value;else if(d.w){S.w[d.w][d.i]=Math.max(0,+t.value||0);live()}});
+document.addEventListener('change',e=>{const d=e.target.dataset;if(d.cfg){const[a,k,i]=d.cfg.split('|');if(a==='gw'){const s=S.cfg.gw[k]||[null,4];s[+i]=+e.target.value;S.cfg.gw[k]=s}else S.cfg.ox[k][+i]=+e.target.value;afterChange()}});
+function blank(){S.data=emptyD();DR={};recompute();hub();toast('Blank report started. Open a form to add readings')}
+function resetSample(){S=buildSample();DR={};recompute();hub();toast('Sample data loaded')}
+function saveRec(){if(!S.meta.date){toast('Pick a date first');return}const r={...clone(S),id:S.meta.date};delete r.form;const i=H.findIndex(h=>h.id===r.id);i>=0?H[i]=r:H.push(r);persist();toast('Record saved for '+r.id);if(view==='dash')dash();if(view==='hist')hist()}
+
+/* ---------- History ---------- */
+function hist(){const rows=[...H].sort((a,b)=>a.id<b.id?1:-1);
+$g('hist').innerHTML=`<div class="card"><h3>Saved records</h3><div class="sc"><table><tr><th>Date</th><th>Plant</th><th>By</th><th>Total MQI</th><th>Grade</th><th></th></tr>${rows.map(h=>{const v=calc(h).all,g=grade(v);return`<tr><td>${h.id}</td><td>${esc(h.meta.plant)}</td><td>${esc(h.meta.by)}</td><td><b>${f(v)}</b></td><td><span class="chip" style="background:${g[1]}">${g[0]}</span></td><td><button class="btn" onclick="openRec('${h.id}')">Open</button> <button class="btn" onclick="delRec('${h.id}')">Delete</button></td></tr>`}).join('')}</table></div>
+<div class="sub" style="margin-top:8px">Records are stored in this browser only.</div></div>`}
+function openRec(id){S=clone(H.find(h=>h.id===id));S.cfg=S.cfg||defCfg();S.data=S.data||emptyD();DR={};recompute();go('entry')}
+function delRec(id){if(H.length<2){toast('Keep at least one record');return}H=H.filter(h=>h.id!==id);persist();hist()}
+
+/* ---------- Export ---------- */
+function rows(){const c=calc(),r=[];ST.forEach(s=>{const tw=S.w[s.id].reduce((a,b)=>+a+ +b,0);s.p.forEach((p,j)=>r.push([s.n,p[0],S.n[s.id][j],S.w[s.id][j],f(S.w[s.id][j]/tw*100)+'%',f(S.sc[s.id][j])]));r.push([s.n,'Stage MQI','','','',f(c[s.id])])});return r}
+function summ(){const c=calc();return[['Total Manufacturing Quality Index','all'],['Raw Material','rm'],['Grid Casting','grid'],['Lead Oxide','oxide'],['POS Cured Plate','pos'],['NEG Cured Plate','neg'],['Plate Preparation','plate'],['Assembly','asm'],['Charging','chg'],['Battery Performance','perf']].map(([n,i])=>[n,f(c[i]),grade(c[i])[0]])}
+function exp(){$g('exp').innerHTML=`<div class="grid g4"><div class="card"><h3>PDF report</h3><p class="sub">Formatted report with summary and parameter detail.</p><button class="btn p" onclick="doPDF()">Download PDF</button></div><div class="card"><h3>Excel workbook</h3><p class="sub">Summary, detail, every entry sheet and history.</p><button class="btn p" onclick="doXLS()">Download Excel</button></div><div class="card"><h3>Markdown</h3><p class="sub">Plain-text tables for docs and wikis.</p><button class="btn p" onclick="doMD()">Download MD</button></div></div>
+<div class="card"><h3>Summary preview</h3><table><tr><th>Index</th><th>MQI</th><th>Grade</th></tr>${summ().map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td><td>${r[2]}</td></tr>`).join('')}</table></div>`}
+async function save(name,data){try{const d=await claude.use('downloads');if(d){await d.save({filename:name,data});toast('Saved '+name);return}}catch(e){if(e&&e.code==='declined')return}
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data]));a.download=name;a.click();toast('Downloaded '+name)}
+const fn=ext=>'MQI_'+S.meta.date+'.'+ext;
+const SN={h2:'H2SO4',al:'Alloy',gw:'GridWeight',gs:'GridDefects',ox:'Oxide',po:'POS',ne:'NEG',as:'Assembly',ch:'Charging',pf:'Performance'};
+const iso=()=>new Date().toISOString().slice(0,10);
+const gtypes=x=>[...new Set([...GR,...S.data[x].map(r=>r.ty).filter(Boolean)])];
+function doPDF(){if(!window.jspdf){toast('PDF library not loaded');return}
+const d=new jspdf.jsPDF({unit:'mm',format:'a4'}),m=S.meta,c=calc(),g=grade(c.all),W=210;
+const rgb=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16)),fc=h=>d.setFillColor(...rgb(h)),dc=h=>d.setDrawColor(...rgb(h)),tc=h=>d.setTextColor(...rgb(h));
+const T=(s,x,y,o)=>d.text(Array.isArray(s)?s:String(s),x,y,o),B=z=>{d.setFont('helvetica','bold');d.setFontSize(z)},N=z=>{d.setFont('helvetica','normal');d.setFontSize(z)};
+const poly=(pts,st)=>d.lines(pts.slice(1).map((p,i)=>[p[0]-pts[i][0],p[1]-pts[i][1]]),pts[0][0],pts[0][1],[1,1],st,true);
+fc('#3b5bdb');d.rect(0,0,W,30,'F');tc('#ffffff');B(18);T('Manufacturing Quality Index Report',14,13);N(9);T(m.plant,14,20);T(`Report date ${m.date}   |   Period ${m.from||'-'} to ${m.to||'-'}   |   Prepared by ${m.by}`,14,25.5);
+fc('#f3f5fa');d.roundedRect(14,36,48,36,3,3,'F');tc('#667085');N(8);T('TOTAL MQI',38,43,{align:'center'});tc(g[1]);B(26);T(f(c.all),38,56,{align:'center'});B(9);T(g[0],38,64,{align:'center'});
+MAIN.forEach((i,k)=>{const x=66+k*26.5,v=c[i];fc('#f3f5fa');d.roundedRect(x,36,24,36,3,3,'F');tc('#667085');N(6.5);T(d.splitTextToSize(NAME[i],21),x+2,41);tc(grade(v)[1]);B(13);T(f(v),x+12,58,{align:'center'});fc('#e3e7ef');d.rect(x+3,64,18,2,'F');fc(grade(v)[1]);d.rect(x+3,64,18*v/100,2,'F')});
+tc('#14213d');B(11);T('Stage MQI',14,82);N(7);tc('#667085');T('Bars start at 50',196,82,{align:'right'});
+const ids=['rm','grid','oxide','pos','neg','plate','asm','chg','perf'];
+ids.forEach((i,k)=>{const y=87+k*7;tc('#14213d');N(8);T(NAME[i],14,y+4);fc('#e3e7ef');d.rect(56,y,130,4.5,'F');fc(grade(c[i])[1]);d.rect(56,y,130*Math.max(0,(c[i]-50)/50),4.5,'F');tc('#14213d');B(8);T(f(c[i]),196,y+4,{align:'right'})});
+tc('#667085');N(7);[[50,56],[75,121],[100,186]].forEach(([v,x])=>T(v,x,153,{align:'center'}));
+tc('#14213d');B(11);T('Stage profile',14,163);T('Top improvement opportunities',104,163);
+const cx=52,cy=198,Rr=26,ang=k=>(-90+k*72)*Math.PI/180,P=(k,v)=>{const r=Rr*(v-60)/40;return[cx+r*Math.cos(ang(k)),cy+r*Math.sin(ang(k))]};
+dc('#c9d0de');d.setLineWidth(.2);[60,70,80,90,100].forEach(v=>poly(MAIN.map((_,k)=>P(k,v)),'S'));MAIN.forEach((_,k)=>d.line(cx,cy,...P(k,100)));
+fc('#cdd7fb');dc('#3b5bdb');d.setLineWidth(.6);poly(MAIN.map((i,k)=>P(k,Math.max(60,c[i]))),'FD');fc('#3b5bdb');MAIN.forEach((i,k)=>d.circle(...P(k,Math.max(60,c[i])),1,'F'));
+tc('#14213d');N(7);MAIN.forEach((i,k)=>{const p=P(k,100),a=Math.cos(ang(k));T(NAME[i]+' '+f(c[i]),p[0]+(a>.3?3:a<-.3?-3:0),p[1]+(k===0?-3:4),{align:a>.3?'left':a<-.3?'right':'center'})});
+tc('#667085');N(6);T('Axis 60 to 100',cx,cy+Rr+10,{align:'center'});
+const im=impacts(c).filter(r=>r[1]>.005);N(8);
+if(!im.length){tc('#667085');T('All parameters are at 100.',104,172)}
+im.forEach((r,k)=>{const y=169+k*12;tc('#14213d');N(7.5);T(r[0].length>52?r[0].slice(0,50)+'...':r[0],104,y+3);fc('#e3e7ef');d.rect(104,y+5,70,3.5,'F');fc('#d92d4a');d.rect(104,y+5,70*r[1]/im[0][1],3.5,'F');tc('#d92d4a');B(8);T('+'+f(r[1])+' pts',196,y+8,{align:'right'})});
+tc('#667085');N(7);T('Points of Total MQI recovered if the parameter reached 100.',104,232);
+d.addPage();tc('#14213d');B(13);T('Trend of saved records',14,18);
+const pts=[...H.filter(h=>h.id!==m.date).map(h=>[h.meta.date,calc(h).all]),[m.date,c.all]].sort((a,b)=>a[0]<b[0]?-1:1);
+if(pts.length<2){tc('#667085');N(9);T('Save records for more dates to see a trend here.',14,28)}else{
+const lo=Math.floor(Math.min(...pts.map(p=>p[1]),90)/5)*5-5,X=(i)=>30+i*(160/(pts.length-1)),Y=v=>80-(v-lo)/(100-lo)*50;
+dc('#e3e7ef');d.setLineWidth(.2);tc('#667085');N(7);for(let k=0;k<=4;k++){const v=lo+k*(100-lo)/4;d.line(30,Y(v),190,Y(v));T(Math.round(v),27,Y(v)+1,{align:'right'})}
+dc('#3b5bdb');d.setLineWidth(.8);pts.forEach((p,i)=>i&&d.line(X(i-1),Y(pts[i-1][1]),X(i),Y(p[1])));fc('#3b5bdb');pts.forEach((p,i)=>{d.circle(X(i),Y(p[1]),1.2,'F');if(pts.length<9||i%Math.ceil(pts.length/8)===0)T(p[0],X(i),85,{align:'center'})});
+tc('#14213d');N(7);pts.length<13&&pts.forEach((p,i)=>T(f(p[1]),X(i),Y(p[1])-2.5,{align:'center'}))}
+tc('#14213d');B(13);T('Summary',14,98);
+d.autoTable({startY:101,head:[['Index','MQI','Grade']],body:summ(),headStyles:{fillColor:[59,91,219]},didParseCell:h=>{if(h.section==='body'&&h.column.index>0){const v=+h.row.raw[1];h.cell.styles.textColor=rgb(grade(v)[1]);h.cell.styles.fontStyle='bold'}}});
+d.addPage();tc('#14213d');B(13);T('Parameter detail',14,18);
+d.autoTable({startY:22,head:[['Stage','Parameter','Samples','Rel. weight','Weight %','Score']],body:rows(),styles:{fontSize:8},headStyles:{fillColor:[59,91,219]},didParseCell:h=>{if(h.section==='body'){const r=h.row.raw;if(r[1]==='Stage MQI')h.cell.styles.fontStyle='bold',h.cell.styles.fillColor=[234,239,255];if(h.column.index===5&&r[5]!==''){h.cell.styles.textColor=rgb(grade(+r[5])[1]);h.cell.styles.fontStyle='bold'}}}});
+let y=d.lastAutoTable.finalY+10;if(y>255){d.addPage();y=20}
+tc('#14213d');B(10);T('How the index is calculated',14,y);N(8);tc('#667085');T(d.splitTextToSize('Each parameter gets a score from 0 to 100 from the readings entered. A stage MQI is the weighted average of its parameter scores (weight = relative weight divided by the sum of weights). Plate Preparation averages Grid Casting, Lead Oxide, POS and NEG plates. Total MQI is the weighted average of Raw Material, Plate Preparation, Assembly, Charging and Battery Performance. Grades: 95+ Excellent, 90+ Good, 80+ Needs improvement, below 80 Critical.',182),14,y+6);
+const np=d.getNumberOfPages();for(let p=1;p<=np;p++){d.setPage(p);N(8);tc('#667085');T('MQI Manager - generated '+iso(),14,290);T(`Page ${p} of ${np}`,196,290,{align:'right'})}
+save(fn('pdf'),d.output('arraybuffer'))}
+function doXLS(){if(!window.XLSX){toast('Excel library not loaded');return}const wb=XLSX.utils.book_new(),m=S.meta,cc=calc();
+const cl=(f,v,z)=>({t:typeof v==='string'?'s':'n',f,v,...(z?{z}:{})}),col=(id,k)=>{const x=F.find(q=>q.id===id),L=XLSX.utils.encode_col(x.f.findIndex(q=>q.k===k));return`${SN[id]}!$${L}$2:$${L}$5000`};
+const sh=(rows,w)=>{const s=XLSX.utils.aoa_to_sheet(rows);s['!cols']=w.map(x=>({wch:x}));return s};
+/* Grid Calc */
+const gt=gtypes('gw'),T0=5,gwTot=T0+gt.length,tyG=col('gw','ty'),vG=col('gw','v'),gm={};R.gwg.forEach(g=>gm[g.ty]=g);
+const gc=[['Grid weight and grid defects calculation'],['SD limit (blue = input)',3],[],['Grid type','Samples (n)','Mean','SD','Expected mean','Half range','Type MQI']];
+gt.forEach((ty,i)=>{const r=T0+i,g=gm[ty],sp=S.cfg.gw[ty];gc.push([ty,cl(`=COUNTIF(${tyG},A${r})`,g?g.n:0),cl(`=IF(B${r}>0,AVERAGEIF(${tyG},A${r},${vG}),"")`,g&&g.mu!=null?g.mu:'','0.000'),cl(`=IF(B${r}>1,SQRT((SUMPRODUCT((${tyG}=A${r})*(${vG}^2))-B${r}*C${r}^2)/(B${r}-1)),"")`,g&&g.sd!=null?g.sd:'','0.000'),sp?sp[0]:'',sp?sp[1]:'',cl(`=IF(AND(B${r}>=2,ISNUMBER(E${r})),IF(ABS(C${r}-E${r})<=F${r},70-60/F${r}*ABS(C${r}-E${r}),0)+IF(D${r}<=$B$2,30-25/3*D${r},0),"")`,g&&g.sp&&g.n>=2?g.s:'','0.00')])});
+gc.push(['Grid weight MQI (average of types with 2+ samples)','','','','','',cl(`=IFERROR(AVERAGE(G${T0}:G${gwTot-1}),0)`,R.gw.s,'0.00')],[],['Grid defects: each Y scores 100, each N scores 80'],['Grid type','Samples (n)','Y','N','Type MQI']);
+const D0=gwTot+4,tyS=col('gs','ty'),rS=col('gs','r'),dr=S.data.gs;
+gt.forEach((ty,i)=>{const r=D0+i,y=dr.filter(q=>q.ty===ty&&q.r==='Y').length,n=dr.filter(q=>q.ty===ty&&q.r==='N').length;gc.push([ty,cl(`=COUNTIF(${tyS},A${r})`,y+n),cl(`=COUNTIFS(${tyS},A${r},${rS},"Y")`,y),cl(`=COUNTIFS(${tyS},A${r},${rS},"N")`,n),cl(`=IF(B${r}>=2,(C${r}*100+D${r}*80)/(C${r}+D${r}),"")`,y+n>=2?(y*100+n*80)/(y+n):'','0.00')])});
+const gsTot=D0+gt.length;gc.push(['Grid defects MQI (average of types with 2+ samples)','','','',cl(`=IFERROR(AVERAGE(E${D0}:E${gsTot-1}),0)`,R.gs.s,'0.00')]);
+/* Detail MQI */
+const g4=r=>`=IFERROR((COUNTIF(${r},"G")*100+COUNTIF(${r},"C")*80+COUNTIF(${r},"B")*60+COUNTIF(${r},"A")*40)/(COUNTIF(${r},"G")+COUNTIF(${r},"C")+COUNTIF(${r},"B")+COUNTIF(${r},"A")),0)`;
+const two=(r,a,b,wa,wb)=>`=IFERROR((COUNTIF(${r},"${a}")*${wa}+COUNTIF(${r},"${b}")*${wb})/(COUNTIF(${r},"${a}")+COUNTIF(${r},"${b}")),0)`;
+const lim=(r,op,w)=>`=IFERROR((COUNTIF(${r},"${op}"&H${w})*100+COUNTIF(${r},"${op==='<='?'>':'<'}"&H${w})*80)/COUNT(${r}),0)`;
+const tier=(r,w)=>`=IFERROR((COUNTIF(${r},">="&H${w})*100+COUNTIFS(${r},">="&I${w},${r},"<"&H${w})*80+COUNTIFS(${r},">="&J${w},${r},"<"&I${w})*60)/COUNT(${r}),0)`;
+const sta=(r,w)=>`=IF(COUNT(${r})>=2,IF(ABS(AVERAGE(${r})-H${w})<=I${w},70-60/I${w}*ABS(AVERAGE(${r})-H${w}),0)+IF(STDEV(${r})<=J${w},30-25/3*STDEV(${r}),0),0)`;
+const o=S.cfg.ox,PD={
+h2:[w=>two(col('h2','r'),'OK','NOT OK',100,80),0,'OK = 100, NOT OK = 80. Score = average of sample scores.'],
+al:[w=>two(col('al','r'),'Y','N',100,60),0,'Accepted (Y) = 100, rejected (N) = 60. Score = average.'],
+gs:[()=>`='Grid Calc'!E${gsTot}`,0,'Average of grid type scores (see Grid Calc sheet). One score feeds feather, crack and strand.'],
+gw:[()=>`='Grid Calc'!G${gwTot}`,0,'Average of grid type scores: mean part (max 70) + spread part (max 30). See Grid Calc sheet.'],
+flc:[w=>sta(col('ox','flc'),w),[o.flc[0],o.flc[1],o.flc[2]],'Mean part: 70 - 60/half range x |mean - expected|. Spread part: 30 - 25/3 x SD (0 if SD above limit). Needs 2+ samples.'],
+ad:[w=>sta(col('ox','ad'),w),[o.ad[0],o.ad[1],o.ad[2]],'Same rule as FLC.'],
+aa:[w=>sta(col('ox','aa'),w),[o.aa[0],o.aa[1],o.aa[2]],'Same rule as FLC.'],
+pf:[w=>lim(col('po','flc'),'<=',w),[3],'Within limit (H) = 100, above = 80. Score = average.'],
+pm:[w=>lim(col('po','m'),'<=',w),[.5],'Within limit (H) = 100, above = 80.'],
+nf:[w=>lim(col('ne','flc'),'<=',w),[5],'Within limit (H) = 100, above = 80.'],
+nm:[w=>lim(col('ne','m'),'<=',w),[.5],'Within limit (H) = 100, above = 80.'],
+oc:[w=>lim(col('ch','oc'),'>=',w),[12.6],'At or above minimum (H) = 100, below = 80.'],
+sg:[w=>lim(col('ch','sg'),'>=',w),[1.265],'At or above minimum (H) = 100, below = 80.'],
+ph:[w=>two(col('ch','p'),'G','P',100,80),0,'Good (G) = 100, Poor (P) = 80.'],
+c20:[w=>tier(col('pf','c20'),w),[100,90,80],'Capacity at or above H = 100, at or above I = 80, at or above J = 60, otherwise 0.'],
+c5:[w=>tier(col('pf','c5'),w),[100,95,80],'Same tiers as C20.'],
+rc:[w=>tier(col('pf','rc'),w),[100,90,75],'Same tiers as C20.'],
+cca:[w=>`=IFERROR((COUNTIF(${col('pf','cca')},">="&H${w})*100+COUNTIF(${col('pf','cca')},"<"&H${w})*60)/COUNT(${col('pf','cca')}),0)`,[7.2],'Voltage at or above H = 100, below = 60.'],
+cha:[w=>`=IFERROR((COUNTIF(${col('pf','cha')},">="&H${w})*80+COUNTIF(${col('pf','cha')},"<"&H${w})*60)/COUNT(${col('pf','cha')}),0)`,[60],'At or above H = 80, below = 60.']};
+for(let i=0;i<9;i++)PD['a'+i]=[w=>g4(col('as','a'+i)),0,'Grades: G = 100, C = 80, B = 60, A = 40. Score = average.'];
+const dm=[['Manufacturing Quality Index - calculation detail'],['Weights and limits are inputs. Weight % = relative weight / sum of weights in the stage. Contribution = weight % x score. Stage MQI = sum of contributions.'],[],['Stage','Parameter','Samples','Relative weight','Weight %','Score','Contribution','Limit / expected (H)','(I)','(J)','How the score is calculated']];
+let r=5;const sr={};
+ST.forEach(s=>{const a=r,b=r+s.p.length-1;s.p.forEach((p,j)=>{const k=STK[s.id][j],pd=PD[k],sp=pd[1]||[];dm.push([s.n,p[0],S.n[s.id][j],S.w[s.id][j],cl(`=D${r}/SUM($D$${a}:$D$${b})`,S.w[s.id][j]/S.w[s.id].reduce((x,y)=>+x+ +y,0),'0.0%'),cl(pd[0](r),S.sc[s.id][j],'0.00'),cl(`=E${r}*F${r}`,0,'0.00'),sp[0]??'',sp[1]??'',sp[2]??'',pd[2]]);r++});
+dm.push([s.n,'Stage MQI','','','',cl(`=SUM(G${a}:G${b})`,cc[s.id],'0.00')]);sr[s.id]=r;r++;dm.push([]);r++});
+const blk=(title,ids,w,tag)=>{const a=r,b=r+ids.length-1;ids.forEach((id,j)=>{dm.push([title,NAME[id],'',w[j],cl(`=D${r}/SUM($D$${a}:$D$${b})`,w[j]/w.reduce((x,y)=>+x+ +y,0),'0.0%'),cl(`=F${sr[id]}`,cc[id],'0.00'),cl(`=E${r}*F${r}`,0,'0.00')]);r++});dm.push([title,tag,'','','',cl(`=SUM(G${a}:G${b})`,cc[tag==='Plate Preparation MQI'?'plate':'all'],'0.00')]);sr[tag==='Plate Preparation MQI'?'plate':'all']=r;r++;dm.push([]);r++};
+blk('Plate Preparation',PLATE,S.w.plate,'Plate Preparation MQI');
+MAIN.forEach(()=>0);const ra=r;MAIN.forEach((id,j)=>{dm.push(['Overall',NAME[id],'',S.w.all[j],cl(`=D${r}/SUM($D$${ra}:$D$${ra+4})`,S.w.all[j]/S.w.all.reduce((x,y)=>+x+ +y,0),'0.0%'),cl(`=F${sr[id]}`,cc[id],'0.00'),cl(`=E${r}*F${r}`,0,'0.00')]);r++});dm.push(['Overall','TOTAL MQI','','','',cl(`=SUM(G${ra}:G${ra+4})`,cc.all,'0.00')]);sr.all=r;
+/* fix cached contribution values */
+dm.forEach(row=>{if(row[6]&&row[6].f&&row[6].v===0){const e=row[4],f_=row[5];row[6].v=(e&&e.v||0)*(f_&&f_.v||0)}});
+const lnk=id=>`='Detail MQI'!F${sr[id]}`,gf=a=>`=IF(${a}>=95,"Excellent",IF(${a}>=90,"Good",IF(${a}>=80,"Needs improvement","Critical")))`;
+const su=[['Manufacturing Quality Index'],[m.plant],['Report date',m.date],['Period',(m.from||'')+' to '+(m.to||'')],['Prepared by',m.by],['Remarks',m.note],[],['Index','MQI','Grade']];
+[['Total Manufacturing Quality Index','all'],['Raw Material','rm'],['Grid Casting','grid'],['Lead Oxide','oxide'],['POS Cured Plate','pos'],['NEG Cured Plate','neg'],['Plate Preparation','plate'],['Assembly','asm'],['Charging','chg'],['Battery Performance','perf']].forEach(([n,id],i)=>{const rr=9+i;su.push([n,cl(lnk(id),cc[id],'0.00'),cl(gf('B'+rr),grade(cc[id])[0])])});
+su.push([],['Every MQI above links to the Detail MQI sheet, which calculates from the entry sheets. Change an entry or a weight and the numbers update. See Calc Guide for the rules.']);
+const gd=[['How the MQI is calculated'],[],['1. Parameter score','Each reading is scored (for example G = 100, C = 80, B = 60, A = 40, or within limit = 100). The parameter score is the average of its readings. Counted rows: all rows on the entry sheet (up to row 5000).'],['2. Statistical parameters','Grid weight and lead oxide: mean part = 70 - 60 / half range x |mean - expected| (0 if outside the half range); spread part = 30 - 25 / 3 x SD (0 if SD above the limit). At least 2 samples are required.'],['3. Stage MQI','Weighted average of parameter scores: sum of (relative weight / total weight x score).'],['4. Plate Preparation','Weighted average of Grid Casting, Lead Oxide, POS and NEG plate MQIs.'],['5. Total MQI','Weighted average of Raw Material, Plate Preparation, Assembly, Charging and Battery Performance.'],['6. Grade','95 and above Excellent, 90 and above Good, 80 and above Needs improvement, below 80 Critical.'],[],['Sheets','Summary, Detail MQI (formulas), Grid Calc (per grid type), then one sheet per entry form, and History.']];
+const sw=(a,w)=>{const s=XLSX.utils.aoa_to_sheet(a);s['!cols']=w.map(x=>({wch:x}));return s};
+XLSX.utils.book_append_sheet(wb,sw(su,[40,12,22]),'Summary');XLSX.utils.book_append_sheet(wb,sw(dm,[22,32,10,14,10,10,13,18,8,8,80]),'Detail MQI');XLSX.utils.book_append_sheet(wb,sw(gd,[26,120]),'Calc Guide');XLSX.utils.book_append_sheet(wb,sw(gc,[44,12,10,10,14,12,12]),'Grid Calc');
+F.forEach(x=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([x.f.map(q=>q.l),...S.data[x.id].map(q=>x.f.map(z=>q[z.k]??''))]),SN[x.id]));
+XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Date','Plant','Prepared by','Total MQI'],...[...H].sort((a,b)=>a.id<b.id?-1:1).map(h=>[h.id,h.meta.plant,h.meta.by,+f(calc(h).all)])]),'History');
+wb.Workbook={CalcPr:{fullCalcOnLoad:true}};
+save(fn('xlsx'),XLSX.write(wb,{type:'array',bookType:'xlsx'}))}
+function doMD(){const m=S.meta,t=a=>a.map(r=>'| '+r.join(' | ')+' |').join('\n');
+save(fn('md'),`# Manufacturing Quality Index (MQI)\n\n**${m.plant}**  \nDate: ${m.date} · Period: ${m.from||'-'} to ${m.to||'-'} · Prepared by: ${m.by}\n\n${m.note?'> '+m.note+'\n\n':''}## Summary\n\n| Index | MQI | Grade |\n|---|---|---|\n${t(summ())}\n\n## Detail\n\n| Stage | Parameter | Samples | Rel. weight | Weight % | Score |\n|---|---|---|---|---|---|\n${t(rows())}\n`)}
+load();if(!S){S=clone(H[H.length-1]);S.data=S.data||emptyD();S.cfg=S.cfg||defCfg()}recompute();draw();
+</script></body></html>
